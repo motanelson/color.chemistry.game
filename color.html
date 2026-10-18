@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chroma Alchemist - Pigment Mixing Game</title>
+<style>
+  :root {
+    --bg-wood: #2c1e18;
+    --bench: #3d281d;
+    --bench-top: #523728;
+    --accent: #ffd166;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+  }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 20%, #4a3328, var(--bg-wood));
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f7eedb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2.2rem;
+    color: var(--accent);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+
+  p {
+    margin: 5px 0 0;
+    color: #dfcdb4;
+    font-size: 0.95rem;
+  }
+
+  /* Game Container */
+  .game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    width: 100%;
+  }
+
+  /* Target Card */
+  .target-board {
+    background: rgba(20, 12, 8, 0.75);
+    border: 2px solid #8c6747;
+    border-radius: 16px;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    margin-bottom: 25px;
+  }
+
+  .swatch-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .color-circle {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.5);
+    transition: background 0.3s;
+  }
+
+  .score-card {
+    text-align: left;
+  }
+  .score-card div {
+    font-size: 0.9rem;
+    color: #c4b5a2;
+  }
+  .score-card span {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  /* Lab Bench Display */
+  .lab-bench {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    background: linear-gradient(to bottom, #442d22, var(--bench));
+    border-top: 10px solid var(--bench-top);
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: 0 30px 40px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.7), inset 0 3px 6px rgba(255,255,255,0.1);
+  }
+
+  /* Glass Main Beaker */
+  .beaker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .flask {
+    width: 160px;
+    height: 220px;
+    position: relative;
+    border: 4px solid rgba(255, 255, 255, 0.45);
+    border-top: none;
+    border-radius: 0 0 40px 40px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(2px);
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 15px rgba(255,255,255,0.15);
+  }
+
+  .flask-neck {
+    width: 70px;
+    height: 25px;
+    border: 4px solid rgba(255, 255, 255, 0.45);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: -2px;
+  }
+
+  .flask-liquid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background-color: transparent;
+    transition: height 0.4s ease, background-color 0.4s ease;
+    border-radius: 0 0 36px 36px;
+  }
+
+  .meniscus {
+    position: absolute;
+    top: -6px;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    background: inherit;
+    filter: brightness(1.2);
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+
+  .measurement-marks {
+    position: absolute;
+    right: 8px;
+    top: 20%;
+    height: 65%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .mark {
+    width: 12px;
+    height: 2px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  /* Test Tubes */
+  .rack {
+    display: flex;
+    gap: 25px;
+  }
+
+  .test-tube-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .test-tube-unit:hover .tube {
+    transform: translateY(-8px);
+  }
+
+  .tube {
+    width: 44px;
+    height: 160px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-top: none;
+    border-radius: 0 0 25px 25px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    transition: transform 0.2s;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  }
+
+  .tube-lip {
+    width: 52px;
+    height: 8px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+    margin-bottom: -2px;
+  }
+
+  .tube-liquid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 85%;
+    border-radius: 0 0 22px 22px;
+  }
+
+  /* Pigment Base Colors (CMY / RYB pigment tone) */
+  .red-pigment { background: linear-gradient(to right, #cf1b2e, #f13348); }
+  .yellow-pigment { background: linear-gradient(to right, #e2aa00, #fedb00); }
+  .blue-pigment { background: linear-gradient(to right, #004fb6, #0e72eb); }
+
+  .tube-label {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #ecd9c6;
+  }
+
+  /* Action Buttons */
+  .controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+  }
+
+  button {
+    background: #6a4c38;
+    color: #fff;
+    border: 2px solid #9f7457;
+    padding: 10px 22px;
+    font-size: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #3b281d;
+    transition: all 0.1s;
+  }
+
+  button:hover {
+    background: #805c44;
+  }
+
+  button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #3b281d;
+  }
+
+  button.primary {
+    background: #2a9d8f;
+    border-color: #48cae4;
+    box-shadow: 0 4px 0 #1b635a;
+  }
+  button.primary:hover {
+    background: #33b8a8;
+  }
+  button.primary:active {
+    box-shadow: 0 1px 0 #1b635a;
+  }
+
+  /* Drop Animation Element */
+  .droplet {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Modal Dialog */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  .modal-content {
+    background: #3b281e;
+    border: 2px solid var(--accent);
+    border-radius: 15px;
+    padding: 25px 35px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chroma Alchemist</h1>
+  <p>Blend the physical pigments (Red, Yellow, Blue) to match the target color!</p>
+</header>
+
+<div class="game-area">
+  <!-- Target and Info Card -->
+  <div class="target-board">
+    <div class="swatch-group">
+      <span>Target</span>
+      <div id="targetSwatch" class="color-circle"></div>
+      <small id="targetName">Loading...</small>
+    </div>
+
+    <div class="swatch-group">
+      <span>Your Mix</span>
+      <div id="mixedSwatch" class="color-circle" style="background-color: transparent;"></div>
+      <small id="dropCount">0 Drops</small>
+    </div>
+
+    <div class="score-card">
+      <div>Round: <span id="roundDisplay">1</span> / 5</div>
+      <div>Score: <span id="scoreDisplay">0</span></div>
+      <div>Streak: <span id="streakDisplay">0</span></div>
+    </div>
+  </div>
+
+  <!-- Physical Lab Bench -->
+  <div class="lab-bench" id="bench">
+    <!-- Main Vessel -->
+    <div class="beaker-container">
+      <div class="flask-neck"></div>
+      <div class="flask" id="flask">
+        <div class="measurement-marks">
+          <div class="mark"></div>
+          <div class="mark"></div>
+          <div class="mark"></div>
+          <div class="mark"></div>
+        </div>
+        <div class="flask-liquid" id="flaskLiquid">
+          <div class="meniscus"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pigment Test Tubes -->
+    <div class="rack">
+      <div class="test-tube-unit" onclick="addPigment('red', event)">
+        <div class="tube-lip"></div>
+        <div class="tube">
+          <div class="tube-liquid red-pigment"></div>
+        </div>
+        <div class="tube-label">Red</div>
+      </div>
+
+      <div class="test-tube-unit" onclick="addPigment('yellow', event)">
+        <div class="tube-lip"></div>
+        <div class="tube">
+          <div class="tube-liquid yellow-pigment"></div>
+        </div>
+        <div class="tube-label">Yellow</div>
+      </div>
+
+      <div class="test-tube-unit" onclick="addPigment('blue', event)">
+        <div class="tube-lip"></div>
+        <div class="tube">
+          <div class="tube-liquid blue-pigment"></div>
+        </div>
+        <div class="tube-label">Blue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button onclick="clearBeaker()">Wash Beaker</button>
+    <button class="primary" onclick="submitMix()">Evaluate Mix</button>
+  </div>
+</div>
+
+<!-- Round Result Modal -->
+<div class="modal" id="resultModal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Round Finished</h2>
+    <p id="modalAccuracy">Accuracy: 0%</p>
+    <p id="modalFeedback">Nice try!</p>
+    <button class="primary" onclick="nextRound()">Continue</button>
+  </div>
+</div>
+
+<script>
+  /* 
+     Subtractive (Pigment) Mixing Math:
+     Pigments absorb colors from white light.
+     We represent base pigments in Cyan, Magenta, Yellow absorption coordinates (0 to 1).
+     When mixed, their absorption adds up proportionally to volume.
+  */
+  const PIGMENTS = {
+    red:    { c: 0.05, m: 0.95, y: 0.90, rgb: '#e62234' },
+    yellow: { c: 0.00, m: 0.10, y: 1.00, rgb: '#fedb00' },
+    blue:   { c: 0.95, m: 0.65, y: 0.05, rgb: '#0e72eb' }
+  };
+
+  const NAMED_PALETTES = [
+    { name: "Orange Zest", recipe: { red: 2, yellow: 4, blue: 0 } },
+    { name: "Forest Green", recipe: { red: 0, yellow: 4, blue: 3 } },
+    { name: "Royal Violet", recipe: { red: 4, yellow: 0, blue: 3 } },
+    { name: "Avocado", recipe: { red: 1, yellow: 5, blue: 2 } },
+    { name: "Terracotta", recipe: { red: 4, yellow: 3, blue: 1 } },
+    { name: "Teal Deep", recipe: { red: 0, yellow: 2, blue: 5 } },
+    { name: "Warm Amber", recipe: { red: 2, yellow: 6, blue: 0 } },
+    { name: "Plum Jam", recipe: { red: 5, yellow: 1, blue: 4 } }
+  ];
+
+  let currentMix = { red: 0, yellow: 0, blue: 0 };
+  let currentTarget = null;
+  let round = 1;
+  let score = 0;
+  let streak = 0;
+  const maxDropsPerBeaker = 16;
+
+  function calculatePigmentRGB(drops) {
+    const total = drops.red + drops.yellow + drops.blue;
+    if (total === 0) return null;
+
+    // Weighted subtractive absorption (CMY)
+    let c = (drops.red * PIGMENTS.red.c + drops.yellow * PIGMENTS.yellow.c + drops.blue * PIGMENTS.blue.c) / total;
+    let m = (drops.red * PIGMENTS.red.m + drops.yellow * PIGMENTS.yellow.m + drops.blue * PIGMENTS.blue.m) / total;
+    let y = (drops.red * PIGMENTS.red.y + drops.yellow * PIGMENTS.yellow.y + drops.blue * PIGMENTS.blue.y) / total;
+
+    // Density factor: more drops slightly deepens pigment saturation
+    const density = Math.min(1.2, 0.8 + (total / maxDropsPerBeaker) * 0.4);
+    c = Math.min(1, c * density);
+    m = Math.min(1, m * density);
+    y = Math.min(1, y * density);
+
+    // Convert CMY absorption back to RGB reflectance
+    const r = Math.round((1 - c) * 255);
+    const g = Math.round((1 - m) * 255);
+    const b = Math.round((1 - y) * 255);
+
+    return { r, g, b, css: `rgb(${r}, ${g}, ${b})` };
+  }
+
+  function setupNewRound() {
+    clearBeaker();
+    const recipeIndex = (round - 1) % NAMED_PALETTES.length;
+    currentTarget = NAMED_PALETTES[recipeIndex];
+
+    const targetColor = calculatePigmentRGB(currentTarget.recipe);
+    document.getElementById('targetSwatch').style.backgroundColor = targetColor.css;
+    document.getElementById('targetName').innerText = currentTarget.name;
+    document.getElementById('roundDisplay').innerText = round;
+  }
+
+  function addPigment(type, event) {
+    const totalDrops = currentMix.red + currentMix.yellow + currentMix.blue;
+    if (totalDrops >= maxDropsPerBeaker) return;
+
+    currentMix[type]++;
+    spawnDropAnimation(type, event);
+    updateBeakerDisplay();
+  }
+
+  function spawnDropAnimation(type, event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const flask = document.getElementById('flask').getBoundingClientRect();
+
+    const droplet = document.createElement('div');
+    droplet.className = 'droplet';
+    droplet.style.backgroundColor = PIGMENTS[type].rgb;
+    droplet.style.left = `${rect.left + rect.width / 2}px`;
+    droplet.style.top = `${rect.top + 20}px`;
+    document.body.appendChild(droplet);
+
+    const targetX = flask.left + flask.width / 2;
+    const targetY = flask.top + flask.height * 0.5;
+
+    droplet.animate([
+      { transform: `translate(0, 0) scale(1)`, opacity: 1 },
+      { transform: `translate(${targetX - rect.left - 20}px, -40px) scale(1.2)`, offset: 0.3 },
+      { transform: `translate(${targetX - rect.left - 20}px, ${targetY - rect.top}px) scale(0.6)`, opacity: 0 }
+    ], {
+      duration: 500,
+      easing: 'ease-in-out'
+    }).onfinish = () => droplet.remove();
+  }
+
+  function updateBeakerDisplay() {
+    const total = currentMix.red + currentMix.yellow + currentMix.blue;
+    const mixed = calculatePigmentRGB(currentMix);
+    const liquid = document.getElementById('flaskLiquid');
+    const mixedSwatch = document.getElementById('mixedSwatch');
+    const dropLabel = document.getElementById('dropCount');
+
+    if (total === 0 || !mixed) {
+      liquid.style.height = '0%';
+      liquid.style.backgroundColor = 'transparent';
+      mixedSwatch.style.backgroundColor = 'transparent';
+      dropLabel.innerText = '0 Drops';
+    } else {
+      const fillPercentage = Math.min(88, 15 + (total / maxDropsPerBeaker) * 73);
+      liquid.style.height = `${fillPercentage}%`;
+      liquid.style.backgroundColor = mixed.css;
+      mixedSwatch.style.backgroundColor = mixed.css;
+      dropLabel.innerText = `${total} Drop${total > 1 ? 's' : ''}`;
+    }
+  }
+
+  function clearBeaker() {
+    currentMix = { red: 0, yellow: 0, blue: 0 };
+    updateBeakerDisplay();
+  }
+
+  function calculateColorDistance(rgb1, rgb2) {
+    // Simple Euclidean metric in RGB space
+    const rd = rgb1.r - rgb2.r;
+    const gd = rgb1.g - rgb2.g;
+    const bd = rgb1.b - rgb2.b;
+    const distance = Math.sqrt(rd * rd + gd * gd + bd * bd);
+    const maxDist = Math.sqrt(255 * 255 * 3);
+    return Math.max(0, 100 - (distance / maxDist) * 100);
+  }
+
+  function submitMix() {
+    const total = currentMix.red + currentMix.yellow + currentMix.blue;
+    if (total === 0) {
+      alert("Add some pigments to the container first!");
+      return;
+    }
+
+    const currentRGB = calculatePigmentRGB(currentMix);
+    const targetRGB = calculatePigmentRGB(currentTarget.recipe);
+    const accuracy = Math.round(calculateColorDistance(currentRGB, targetRGB));
+
+    let gainedPoints = 0;
+    let feedback = "";
+
+    if (accuracy >= 92) {
+      gainedPoints = 1000 + (accuracy - 92) * 50;
+      streak++;
+      feedback = "🌟 Master Alchemist! Spot-on recipe match!";
+    } else if (accuracy >= 80) {
+      gainedPoints = 600;
+      streak = 0;
+      feedback = "✨ Very close! Good eye for pigment tones!";
+    } else {
+      gainedPoints = 200;
+      streak = 0;
+      feedback = "🧪 A bit muddy! Remember: Blue + Yellow = Green, Red + Blue = Purple.";
+    }
+
+    score += gainedPoints;
+    document.getElementById('scoreDisplay').innerText = score;
+    document.getElementById('streakDisplay').innerText = streak;
+
+    // Show Dialog
+    document.getElementById('modalAccuracy').innerText = `Accuracy: ${accuracy}%`;
+    document.getElementById('modalFeedback').innerText = feedback;
+    document.getElementById('resultModal').style.display = 'flex';
+  }
+
+  function nextRound() {
+    document.getElementById('resultModal').style.display = 'none';
+    round++;
+    setupNewRound();
+  }
+
+  // Start the first round
+  setupNewRound();
+</script>
+</body>
+</html>
